@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奇门遁甲排盘</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>奇门遁甲排盘</h1>
+            <p>时家奇门 · 转盘式</p>
+        </header>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="control-group">
+                    <label>日期</label>
+                    <input type="date" id="dateInput">
+                </div>
+                <div class="control-group">
+                    <label>时间</label>
+                    <input type="time" id="timeInput">
+                </div>
+                <div class="control-group">
+                    <button class="btn" id="nowBtn">现在</button>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>城市</label>
+                    <select id="citySelect"></select>
+                </div>
+                <div class="control-group">
+                    <label>经度</label>
+                    <input type="number" id="longitudeInput" step="0.0001" value="116.4074">
+                </div>
+                <div class="control-group">
+                    <label>纬度</label>
+                    <input type="number" id="latitudeInput" step="0.0001" value="39.9042">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>定局法</label>
+                    <select id="methodSelect">
+                        <option value="chaiBu">拆补法</option>
+                        <option value="zhiRun" selected>置闰法</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>真太阳时</label>
+                    <select id="solarTimeSelect">
+                        <option value="true">启用</option>
+                        <option value="false">禁用</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <div class="left-panel">
+                <!-- 信息面板 -->
+                <div class="info-panel">
+                    <h3>排盘信息</h3>
+                    
+                    <!-- 时间信息 -->
+                    <div class="time-info">
+                        <div id="displayTime" class="info-line"></div>
+                        <div id="displayLunar" class="info-line"></div>
+                        <div id="displayGanZhi" class="info-line"></div>
+                        <div id="displayKongWang" class="info-line"></div>
+                    </div>
+                    
+                    <!-- 节气信息 -->
+                    <div class="jieqi-info">
+                        <div id="displayPrevJieQi" class="info-line"></div>
+                        <div id="displayNextJieQi" class="info-line"></div>
+                        <div id="displayYuanFirst" class="info-line"></div>
+                        <div id="displayYuanDay" class="info-line"></div>
+                    </div>
+                    
+                    <!-- 局数信息 -->
+                    <div id="displayJuInfo" class="ju-info"></div>
+                    
+                    <div id="trueSolarTime" style="margin-top: 10px; color: var(--text-secondary); font-size: 12px;"></div>
+                </div>
+
+                <!-- 九宫格 -->
+                <div class="pan-container">
+                    <h3>奇门盘</h3>
+                    <div class="gong-grid">
+                        <!-- 按后天八卦方位排列 -->
+                        <!-- 第一行：巽4 离9 坤2 -->
+                        <div class="gong" id="gong-4"></div>
+                        <div class="gong" id="gong-9"></div>
+                        <div class="gong" id="gong-2"></div>
+                        <!-- 第二行：震3 中5 兑7 -->
+                        <div class="gong" id="gong-3"></div>
+                        <div class="gong" id="gong-5"></div>
+                        <div class="gong" id="gong-7"></div>
+                        <!-- 第三行：艮8 坎1 乾6 -->
+                        <div class="gong" id="gong-8"></div>
+                        <div class="gong" id="gong-1"></div>
+                        <div class="gong" id="gong-6"></div>
+                    </div>
+                    
+                    <!-- 宫位结构说明 -->
+                    <div class="gong-structure">
+                        <div class="structure-title">宫位结构说明：</div>
+                        <div class="structure-row">第一行：<span class="s-tian">天盘干</span> | <span class="s-shen">天盘八神</span> | 马/空</div>
+                        <div class="structure-row">第二行：<span class="s-xing">九星</span> | 九星带干</div>
+                        <div class="structure-row">第三行：<span class="s-shen">地盘八神</span> | <span class="s-men">八门</span> | <span class="s-di">地盘干</span></div>
+                    </div>
+                </div>
+
+                <!-- 图例 -->
+                <div class="legend">
+                    <h4>图例说明</h4>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color ji"></span>
+                            <span>吉星/吉门</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color xiong"></span>
+                            <span>凶星/凶门</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color zhi"></span>
+                            <span>值符落宫</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color kong"></span>
+                            <span>空亡</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color ma"></span>
+                            <span>驿马</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <!-- 格局分析 -->
+                <div class="patterns-panel">
+                    <h3>格局分析</h3>
+                    <div id="patternsContainer">
+                        <!-- 格局内容由JS生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>奇门遁甲排盘系统 | 仅供学习研究</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/constants.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/solar-time.js"></script>
+    <script src="js/qimen.js"></script>
+    <script src="js/patterns.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

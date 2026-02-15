@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>排盘调试</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e8e8e8; }
+        pre { background: #2a2a4e; padding: 15px; border-radius: 8px; }
+        .gong-table { display: grid; grid-template-columns: repeat(3, 120px); gap: 5px; margin: 20px 0; }
+        .gong-cell { background: #2a3a5e; padding: 10px; text-align: center; border-radius: 4px; }
+        .gong-cell .num { color: #888; font-size: 12px; }
+        .gong-cell .gan { color: #d4af37; font-size: 18px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>奇门遁甲排盘调试</h1>
+    <div id="output"></div>
+    
+    <script src="js/constants.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/solar-time.js"></script>
+    <script src="js/qimen.js"></script>
+    <script>
+        const now = new Date();
+        const output = document.getElementById('output');
+        
+        try {
+            // 四柱
+            const siZhu = getSiZhu(now);
+            let html = `<pre>
+当前时间: ${now.toLocaleString()}
+
+【四柱】
+年柱: ${siZhu.year}
+月柱: ${siZhu.month}  
+日柱: ${siZhu.day}
+时柱: ${siZhu.hour}
+
+节气: ${siZhu.jieqi?.name}
+</pre>`;
+
+            // 排盘
+            const pan = new QimenPan(now, 116.4, 39.9, 'chaiBu');
+            const result = pan.getResult();
+            
+            html += `<pre>
+【排盘信息】
+阴阳遁: ${result.dunType}遁
+局数: ${result.juNum}局
+三元: ${result.yuan}
+定局法: ${result.method}
+
+旬首: ${result.xunShou}
+遁仪: ${result.dunYi}
+值符星: ${result.zhiFuXing}
+值使门: ${result.zhiShiMen}
+值符落宫: ${result.zhiFuLuoGong}
+
+空亡: ${result.kongWang.join(', ')}
+马星: ${result.maXing}
+</pre>`;
+
+            // 九宫格显示（按方位）
+            // 4巽 9离 2坤
+            // 3震 5中 7兑  
+            // 8艮 1坎 6乾
+            const positions = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+            
+            html += '<h3>地盘</h3><div class="gong-table">';
+            for (const i of positions) {
+                const g = result.gong[i];
+                html += `<div class="gong-cell">
+                    <div class="num">${i}${JIU_GONG_FANGWEI[i]}</div>
+                    <div class="gan">${g.diPan || '-'}</div>
+                </div>`;
+            }
+            html += '</div>';
+            
+            html += '<h3>天盘</h3><div class="gong-table">';
+            for (const i of positions) {
+                const g = result.gong[i];
+                html += `<div class="gong-cell">
+                    <div class="num">${i}${JIU_GONG_FANGWEI[i]}</div>
+                    <div class="gan">${g.tianPan || '-'}</div>
+                </div>`;
+            }
+            html += '</div>';
+            
+            html += '<h3>九星</h3><div class="gong-table">';
+            for (const i of positions) {
+                const g = result.gong[i];
+                html += `<div class="gong-cell">
+                    <div class="num">${i}${JIU_GONG_FANGWEI[i]}</div>
+                    <div class="gan">${g.jiuXing || '-'}</div>
+                </div>`;
+            }
+            html += '</div>';
+            
+            html += '<h3>八门</h3><div class="gong-table">';
+            for (const i of positions) {
+                const g = result.gong[i];
+                html += `<div class="gong-cell">
+                    <div class="num">${i}${JIU_GONG_FANGWEI[i]}</div>
+                    <div class="gan">${g.baMen || '-'}</div>
+                </div>`;
+            }
+            html += '</div>';
+            
+            html += '<h3>八神</h3><div class="gong-table">';
+            for (const i of positions) {
+                const g = result.gong[i];
+                html += `<div class="gong-cell">
+                    <div class="num">${i}${JIU_GONG_FANGWEI[i]}</div>
+                    <div class="gan">${g.baShen || '-'}</div>
+                </div>`;
+            }
+            html += '</div>';
+            
+            output.innerHTML = html;
+            
+        } catch (e) {
+            output.innerHTML = `<pre style="color:red">错误: ${e.message}\n${e.stack}</pre>`;
+        }
+    </script>
+</body>
+</html>

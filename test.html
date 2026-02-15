@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<script src="js/constants.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/solar-time.js"></script>
+<script src="js/qimen.js"></script>
+<script>
+// 测试：2026年2月15日 16:55 北京时间
+const testDate = new Date(2026, 1, 15, 16, 55);
+console.log('测试时间:', testDate.toLocaleString());
+
+const siZhu = getSiZhu(testDate);
+console.log('四柱:', siZhu.year, siZhu.month, siZhu.day, siZhu.hour);
+console.log('节气:', siZhu.jieqi?.name);
+
+const pan = new QimenPan(testDate, 116.4, 39.9, 'chaiBu');
+const result = pan.getResult();
+
+console.log('阴阳遁:', result.dunType);
+console.log('局数:', result.juNum);
+console.log('三元:', result.yuan);
+
+for (let i = 1; i <= 9; i++) {
+    const g = result.gong[i];
+    console.log(i + '宫: 地' + g.diPan + ' 天' + g.tianPan + ' ' + g.jiuXing + ' ' + g.baMen + ' ' + g.baShen);
+}
+</script>
+</body>
+</html>

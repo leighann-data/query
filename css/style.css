@@ -1,0 +1,575 @@
+/* 奇门遁甲排盘 - 清爽浅色风格 */
+
+:root {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #fafafa;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --accent-gold: #8b6914;
+    --accent-red: #c53030;
+    --accent-green: #2f855a;
+    --accent-blue: #2b6cb0;
+    --border-color: #e0e0e0;
+    --gong-bg: #ffffff;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 标题 */
+header {
+    text-align: center;
+    padding: 20px 0 30px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: var(--accent-gold);
+    letter-spacing: 6px;
+    font-weight: 500;
+}
+
+header p {
+    color: var(--text-secondary);
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+/* 控制面板 */
+.control-panel {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.control-row:last-child {
+    margin-bottom: 0;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-group label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.control-group input,
+.control-group select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.control-group input:focus,
+.control-group select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.control-group input[type="date"],
+.control-group input[type="time"] {
+    width: 140px;
+}
+
+.control-group input[type="number"] {
+    width: 90px;
+}
+
+.btn {
+    background: var(--accent-gold);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn:hover {
+    background: #9a7a1c;
+}
+
+/* 主要内容区 */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 信息面板 */
+.info-panel {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+}
+
+.info-panel h3 {
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.time-info, .jieqi-info {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-line {
+    margin: 4px 0;
+    line-height: 1.5;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.ju-info {
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px 30px;
+    margin-bottom: 10px;
+}
+
+.info-item {
+    display: flex;
+    gap: 8px;
+}
+
+.info-item .label {
+    color: var(--text-secondary);
+}
+
+.info-item .value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* 四柱显示 */
+.si-zhu {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.si-zhu-item {
+    text-align: center;
+    background: var(--bg-tertiary);
+    padding: 15px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.si-zhu-item .title {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.si-zhu-item .gz {
+    font-size: 1.5rem;
+    color: var(--accent-gold);
+    font-weight: bold;
+}
+
+/* 九宫格 */
+.pan-container {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.pan-container h3 {
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.gong-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.gong {
+    background: var(--gong-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    min-height: 90px;
+}
+
+.gong:hover {
+    border-color: var(--accent-gold);
+    box-shadow: var(--shadow);
+}
+
+.gong.kong-wang {
+    border-left: 3px solid var(--accent-red);
+}
+
+.gong.ma-xing {
+    border-left: 3px solid var(--accent-green);
+}
+
+.gong.zhi-fu {
+    border-color: var(--accent-gold);
+    background: #fffbeb;
+}
+
+/* 宫位行布局 */
+.gong-row1, .gong-row2, .gong-row3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 3px 6px;
+}
+
+.gong-row1 {
+    border-bottom: 1px solid var(--border-color);
+    background: #fafafa;
+}
+
+.gong-row2 {
+    flex-grow: 1;
+    justify-content: space-between;
+    padding: 4px 6px;
+}
+
+.gong-row3 {
+    border-top: 1px solid var(--border-color);
+    background: #fafafa;
+}
+
+.gong-xing {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.gong-xing.type-ji {
+    color: var(--accent-green);
+}
+
+.gong-xing.type-xiong {
+    color: var(--accent-red);
+}
+
+.gong-men {
+    font-size: 0.8rem;
+    color: var(--accent-blue);
+}
+
+.gong-men.type-ji {
+    color: var(--accent-green);
+}
+
+.gong-men.type-xiong {
+    color: var(--accent-red);
+}
+
+.gong-tian {
+    font-size: 1rem;
+    color: var(--accent-gold);
+}
+
+.gong-di {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.gong-shen {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.gong-daigan, .gong-daigan2 {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    min-width: 1em;
+}
+
+.gong-shen-short {
+    font-size: 0.75rem;
+    color: var(--accent-blue);
+    min-width: 1em;
+}
+
+.mark-kong {
+    color: var(--accent-green);
+    font-size: 0.7rem;
+}
+
+.mark-ma {
+    background: var(--accent-green);
+    color: #fff;
+    font-size: 0.55rem;
+    padding: 1px 2px;
+    border-radius: 2px;
+}
+
+/* 宫位结构说明 */
+.gong-structure {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.structure-title {
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.structure-row {
+    margin: 3px 0;
+    color: var(--text-secondary);
+}
+
+.s-tian { color: var(--accent-gold); font-weight: bold; }
+.s-shen { color: var(--accent-blue); }
+.s-xing { color: var(--text-primary); }
+.s-men { color: var(--accent-blue); }
+.s-di { color: var(--text-secondary); }
+
+/* 侧边栏 */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 格局分析 */
+.patterns-panel {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.patterns-panel h3 {
+    color: var(--accent-gold);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pattern-group {
+    margin-bottom: 15px;
+}
+
+.pattern-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.pattern-daji .pattern-title {
+    color: #ffd700;
+}
+
+.pattern-ji .pattern-title {
+    color: var(--accent-green);
+}
+
+.pattern-zhong .pattern-title {
+    color: var(--text-secondary);
+}
+
+.pattern-xiong .pattern-title {
+    color: var(--accent-red);
+}
+
+.pattern-daxiong .pattern-title {
+    color: #ff4444;
+}
+
+.pattern-item {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.pattern-item:last-child {
+    border-bottom: none;
+}
+
+/* 图例 */
+.legend {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.legend h4 {
+    color: var(--accent-gold);
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    font-size: 0.85rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend-color.ji {
+    background: var(--accent-green);
+}
+
+.legend-color.xiong {
+    background: var(--accent-red);
+}
+
+.legend-color.kong {
+    background: var(--accent-red);
+    opacity: 0.5;
+}
+
+.legend-color.ma {
+    background: var(--accent-green);
+    opacity: 0.5;
+}
+
+.legend-color.zhi {
+    background: var(--accent-gold);
+}
+
+/* 底部 */
+footer {
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+    }
+    
+    .control-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .control-group {
+        width: 100%;
+    }
+    
+    .control-group input,
+    .control-group select {
+        flex: 1;
+    }
+    
+    .si-zhu {
+        gap: 10px;
+    }
+    
+    .si-zhu-item {
+        padding: 10px 15px;
+    }
+    
+    .si-zhu-item .gz {
+        font-size: 1.2rem;
+    }
+    
+    .gong {
+        padding: 5px;
+        font-size: 0.75rem;
+    }
+    
+    .gong-tian {
+        font-size: 1rem;
+    }
+}
