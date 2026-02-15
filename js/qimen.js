@@ -212,13 +212,14 @@ class QimenPan {
     arrangeBaMen() {
         const menYuanPos = { '休门': 1, '生门': 8, '伤门': 3, '杜门': 4, '景门': 9, '死门': 2, '惊门': 7, '开门': 6 };
         
-        // 八门转动：与九星转动方向相反，步数相同
-        // 九星顺转N步 = 八门逆转N步
+        // 八门转动：步数 = min(时干旬内序号 × 2, 6)
+        const hourGZ = this.siZhu.hour;
+        const hourIdx = JIA_ZI_60.indexOf(hourGZ);
+        const xunStart = Math.floor(hourIdx / 10) * 10;
+        const xunNei = hourIdx - xunStart; // 时干在旬内的序号（0-9）
+        const menSteps = Math.min(xunNei * 2, 6);
+        
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
-        const fromIdx = this.gongOrder.indexOf(this.zhiFuYuanGong);
-        const toIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
-        const xingSteps = (toIdx - fromIdx + 8) % 8; // 九星顺转步数
-        const menSteps = (8 - xingSteps) % 8; // 八门逆转转换为顺转
         
         // 计算值使落宫
         const zhiShiFromIdx = this.gongOrder.indexOf(zhiShiYuanGong);
