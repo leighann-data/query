@@ -336,6 +336,8 @@ header p {
 .gong-tian {
     font-size: 1rem;
     color: var(--accent-gold);
+    flex: 1;
+    text-align: left;
 }
 
 .gong-di {
@@ -346,6 +348,13 @@ header p {
 .gong-shen {
     font-size: 0.75rem;
     color: var(--text-secondary);
+    flex: 1;
+    text-align: center;
+}
+
+.gong-marks {
+    flex: 1;
+    text-align: right;
 }
 
 .gong-daigan, .gong-daigan2 {
