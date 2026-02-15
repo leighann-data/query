@@ -260,13 +260,14 @@ function renderGongGrid() {
         // 构建宫位内容 - 按参考图布局
         let html = '';
         
-        // 第一行：天盘干 + 天盘八神 + 马/空标记
+        // 第一行：天盘干 + 八神(中间) + 马/空标记
         html += `<div class="gong-row1">`;
         html += `<span class="gong-tian">${gong.tianPan || ''}</span>`;
-        // 天盘八神（从值符落宫开始）
-        html += `<span class="gong-shen">${gong.tianShen || ''}</span>`;
-        if (gong.maStar) html += `<span class="mark-ma">马</span>`;
-        if (gong.kongWang) html += `<span class="mark-kong">○</span>`;
+        html += `<span class="gong-shen">${gong.baShen || ''}</span>`;
+        let marks = '';
+        if (gong.maStar) marks += `<span class="mark-ma">马</span>`;
+        if (gong.kongWang) marks += `<span class="mark-kong">○</span>`;
+        html += `<span class="gong-marks">${marks}</span>`;
         html += `</div>`;
         
         // 第二行：(天禽带干) + 九星 + 九星带干
@@ -280,10 +281,9 @@ function renderGongGrid() {
         html += `<span class="gong-daigan2">${gong.xingDaiGan || ''}</span>`;
         html += `</div>`;
         
-        // 第三行：地盘八神简写 + 八门 + 地盘干
+        // 第三行：空白 + 八门 + 地盘干
         html += `<div class="gong-row3">`;
-        const shortShen = shenShort[gong.baShen] || '';
-        html += `<span class="gong-shen-short">${shortShen}</span>`;
+        html += `<span class="gong-shen-short"></span>`;
         html += `<span class="gong-men ${getMenClass(gong.baMen)}">${gong.baMen || ''}</span>`;
         html += `<span class="gong-di">${gong.diPan || ''}</span>`;
         html += `</div>`;
