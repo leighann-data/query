@@ -163,9 +163,9 @@ class QimenPan {
         
         // 构建完整地盘(按宫号1-9)
         const diPanFull = [''];
-        for (let gong = 1; gong <= 9; gong++) {
-            const yiIdx = (gong - this.ju + 9) % 9;
-            diPanFull[gong] = jiuYi[yiIdx];
+        for (let g = 1; g <= 9; g++) {
+            const yiIdx = (g - this.ju + 9) % 9;
+            diPanFull[g] = jiuYi[yiIdx];
         }
         
         // 计算移动步数 = 时干旬内序号 - 1
@@ -175,16 +175,19 @@ class QimenPan {
         const xunNei = hourIdx - xunStart;
         const steps = xunNei - 1;
         
+        console.log('tianPan debug:', { hourGZ, hourIdx, xunNei, steps, diPanFull });
+        
         // 天盘干 = 地盘干向前移动steps步
-        for (let gong = 1; gong <= 9; gong++) {
-            if (gong === 5) {
-                this.gong[gong].tianPan = '';
+        for (let g = 1; g <= 9; g++) {
+            if (g === 5) {
+                this.gong[g].tianPan = '';
                 continue;
             }
-            let srcGong = gong + steps;
+            let srcGong = g + steps;
             if (srcGong > 9) srcGong -= 9;
             if (srcGong < 1) srcGong += 9;
-            this.gong[gong].tianPan = diPanFull[srcGong];
+            this.gong[g].tianPan = diPanFull[srcGong];
+            console.log('tianPan gong', g, '=', this.gong[g].tianPan);
         }
     }
     
