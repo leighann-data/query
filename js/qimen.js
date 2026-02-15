@@ -155,13 +155,14 @@ class QimenPan {
     }
     
     arrangeTianPan() {
-        // 天盘算法：从(值符原宫 - 时干旬内offset)开始，按数字顺序排jiuYi
+        // 天盘算法：在八宫顺时针序列中，从局数宫逆数时干偏移步，得到天盘起始宫
         const hourGan = this.siZhu.hour[0];
-        const hourGanOffset = TIAN_GAN.indexOf(hourGan); // 甲=0,乙=1,...丁=3
+        const hourGanOffset = TIAN_GAN.indexOf(hourGan); // 甲=0,乙=1,...戊=4
         
-        // 天盘起始宫 = 值符原宫 - 时干offset
-        let tianPanStart = this.zhiFuYuanGong - hourGanOffset;
-        if (tianPanStart <= 0) tianPanStart += 9;
+        // 在八宫顺时针序列中找局数宫位置，逆数偏移步
+        const juIdx = this.gongOrder.indexOf(this.juNum);
+        const tianPanIdx = (juIdx - hourGanOffset + 8) % 8;
+        let tianPanStart = this.gongOrder[tianPanIdx];
         
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
         
@@ -214,17 +215,24 @@ class QimenPan {
     arrangeBaMen() {
         const menYuanPos = { '休门': 1, '生门': 8, '伤门': 3, '杜门': 4, '景门': 9, '死门': 2, '惊门': 7, '开门': 6 };
         
-        // 八门随值使门转动，步数 = 时干在旬中的偏移
-        const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 1;
-        const fromIdx = this.gongOrder.indexOf(zhiShiYuanGong);
-        const toIdx = this.gongOrder.indexOf(this.zhiShiLuoGong);
-        const steps = (toIdx - fromIdx + 8) % 8;
+        // 八门转动：与九星转动方向相反，步数相同
+        // 九星顺转N步 = 八门逆转N步
+        const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
+        const fromIdx = this.gongOrder.indexOf(this.zhiFuYuanGong);
+        const toIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
+        const xingSteps = (toIdx - fromIdx + 8) % 8; // 九星顺转步数
+        const menSteps = (8 - xingSteps) % 8; // 八门逆转转换为顺转
+        
+        // 计算值使落宫
+        const zhiShiFromIdx = this.gongOrder.indexOf(zhiShiYuanGong);
+        const zhiShiToIdx = (zhiShiFromIdx + menSteps) % 8;
+        this.zhiShiLuoGong = this.gongOrder[zhiShiToIdx];
         
         for (let i = 1; i <= 9; i++) this.gong[i].baMen = '';
         
         for (const [men, yuanGong] of Object.entries(menYuanPos)) {
             const idx = this.gongOrder.indexOf(yuanGong);
-            this.gong[this.gongOrder[(idx + steps) % 8]].baMen = men;
+            this.gong[this.gongOrder[(idx + menSteps) % 8]].baMen = men;
         }
         this.gong[5].baMen = '';
     }
