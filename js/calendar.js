@@ -327,8 +327,8 @@ function getMonthGanZhiByJieQi(year, jieqiName) {
 function getDayGanZhi(year, month, day) {
     // 使用儒略日计算
     const jd = toJulianDay(year, month, day, 12);
-    // 以甲子日为基准，偏移量50
-    const dayNum = Math.floor(jd + 0.5) + 50;
+    // 以甲子日为基准，偏移量49
+    const dayNum = Math.floor(jd + 0.5) + 49;
     const index = dayNum % 60;
     return JIA_ZI_60[(index + 60) % 60];
 }
@@ -388,15 +388,14 @@ function getSiZhu(date) {
     
     const yearGZ = getYearGanZhi(actualYear);
     const monthGZ = jieqi ? getMonthGanZhiByJieQi(year, jieqi.name) : getMonthGanZhi(year, month);
-    const dayGZ = getDayGanZhi(year, month, day);
     
-    // 23点后算次日
-    let hourDate = new Date(date);
+    // 23点后（晚子时）算次日
+    let dayDate = new Date(date);
     if (hour === 23) {
-        hourDate.setDate(hourDate.getDate() + 1);
+        dayDate.setDate(dayDate.getDate() + 1);
     }
-    const hourDayGZ = hour === 23 ? getDayGanZhi(hourDate.getFullYear(), hourDate.getMonth() + 1, hourDate.getDate()) : dayGZ;
-    const hourGZ = getHourGanZhi(hourDayGZ[0], hour);
+    const dayGZ = getDayGanZhi(dayDate.getFullYear(), dayDate.getMonth() + 1, dayDate.getDate());
+    const hourGZ = getHourGanZhi(dayGZ[0], hour);
     
     return {
         year: yearGZ,

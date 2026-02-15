@@ -155,13 +155,10 @@ class QimenPan {
     }
     
     arrangeTianPan() {
-        // 天盘算法：在八宫顺时针序列中，从局数宫逆数时干偏移步，得到天盘起始宫
-        const hourGan = this.siZhu.hour[0];
-        const hourGanOffset = TIAN_GAN.indexOf(hourGan); // 甲=0,乙=1,...戊=4
-        
-        // 在八宫顺时针序列中找局数宫位置，逆数偏移步
-        const juIdx = this.gongOrder.indexOf(this.juNum);
-        const tianPanIdx = (juIdx - hourGanOffset + 8) % 8;
+        // 天盘算法：在八宫顺时针序列中，从值符落宫位置往前一步得到天盘起始宫
+        // 值符落宫 = 时干在地盘的位置
+        const zhiFuLuoIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
+        const tianPanIdx = (zhiFuLuoIdx - 1 + 8) % 8;
         let tianPanStart = this.gongOrder[tianPanIdx];
         
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
