@@ -327,8 +327,8 @@ function getMonthGanZhiByJieQi(year, jieqiName) {
 function getDayGanZhi(year, month, day) {
     // 使用儒略日计算
     const jd = toJulianDay(year, month, day, 12);
-    // 以甲子日为基准
-    const dayNum = Math.floor(jd + 0.5) + 49;
+    // 以甲子日为基准，偏移量50
+    const dayNum = Math.floor(jd + 0.5) + 50;
     const index = dayNum % 60;
     return JIA_ZI_60[(index + 60) % 60];
 }
