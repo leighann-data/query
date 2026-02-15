@@ -155,23 +155,36 @@ class QimenPan {
     }
     
     arrangeTianPan() {
-        // 天盘算法：在八宫顺时针序列中，从值符落宫位置往前一步得到天盘起始宫
-        // 值符落宫 = 时干在地盘的位置
-        const zhiFuLuoIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
-        const tianPanIdx = (zhiFuLuoIdx - 1 + 8) % 8;
-        let tianPanStart = this.gongOrder[tianPanIdx];
+        // 天盘算法：地盘干按宫号移动(旬内序号-1)步
+        // 1. 构建完整地盘(含中宫)
+        // 2. 天盘干[gong] = 地盘干[gong + 步数]
         
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
         
-        // 按数字顺序排天盘(含中宫)
-        for (let i = 0; i < 9; i++) {
-            let gong;
-            if (this.isYangDun) {
-                gong = ((tianPanStart - 1 + i) % 9) + 1;
-            } else {
-                gong = ((tianPanStart - 1 - i + 9) % 9) + 1;
+        // 构建完整地盘(按宫号1-9)
+        const diPanFull = [''];
+        for (let gong = 1; gong <= 9; gong++) {
+            const yiIdx = (gong - this.ju + 9) % 9;
+            diPanFull[gong] = jiuYi[yiIdx];
+        }
+        
+        // 计算移动步数 = 时干旬内序号 - 1
+        const hourGZ = this.siZhu.hour;
+        const hourIdx = JIA_ZI_60.indexOf(hourGZ);
+        const xunStart = Math.floor(hourIdx / 10) * 10;
+        const xunNei = hourIdx - xunStart;
+        const steps = xunNei - 1;
+        
+        // 天盘干 = 地盘干向前移动steps步
+        for (let gong = 1; gong <= 9; gong++) {
+            if (gong === 5) {
+                this.gong[gong].tianPan = '';
+                continue;
             }
-            this.gong[gong].tianPan = jiuYi[i];
+            let srcGong = gong + steps;
+            if (srcGong > 9) srcGong -= 9;
+            if (srcGong < 1) srcGong += 9;
+            this.gong[gong].tianPan = diPanFull[srcGong];
         }
     }
     
