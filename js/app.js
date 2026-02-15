@@ -281,9 +281,10 @@ function renderGongGrid() {
         html += `<span class="gong-daigan2">${gong.xingDaiGan || ''}</span>`;
         html += `</div>`;
         
-        // 第三行：空白 + 八门 + 地盘干
+        // 第三行：地盘八神简写 + 八门 + 地盘干
         html += `<div class="gong-row3">`;
-        html += `<span class="gong-shen-short"></span>`;
+        const shortShen = shenShort[gong.baShen] || '';
+        html += `<span class="gong-shen-short">${shortShen}</span>`;
         html += `<span class="gong-men ${getMenClass(gong.baMen)}">${gong.baMen || ''}</span>`;
         html += `<span class="gong-di">${gong.diPan || ''}</span>`;
         html += `</div>`;
