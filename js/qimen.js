@@ -212,19 +212,24 @@ class QimenPan {
     arrangeBaMen() {
         const menYuanPos = { '休门': 1, '生门': 8, '伤门': 3, '杜门': 4, '景门': 9, '死门': 2, '惊门': 7, '开门': 6 };
         
-        // 八门转动：步数 = min(时干旬内序号 × 2, 6)
+        // 八门转动：值使落宫 = 值使原宫 + 旬内序号（数字直接相加）
         const hourGZ = this.siZhu.hour;
         const hourIdx = JIA_ZI_60.indexOf(hourGZ);
         const xunStart = Math.floor(hourIdx / 10) * 10;
         const xunNei = hourIdx - xunStart; // 时干在旬内的序号（0-9）
-        const menSteps = Math.min(xunNei * 2, 6);
         
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
         
-        // 计算值使落宫
+        // 值使落宫 = 原宫 + 旬内序号
+        let zhiShiLuoGongNum = zhiShiYuanGong + xunNei;
+        if (zhiShiLuoGongNum > 9) zhiShiLuoGongNum -= 9;
+        if (zhiShiLuoGongNum === 5) zhiShiLuoGongNum = 2; // 中宫寄坤
+        this.zhiShiLuoGong = zhiShiLuoGongNum;
+        
+        // 计算八门转动步数（在八宫顺序中）
         const zhiShiFromIdx = this.gongOrder.indexOf(zhiShiYuanGong);
-        const zhiShiToIdx = (zhiShiFromIdx + menSteps) % 8;
-        this.zhiShiLuoGong = this.gongOrder[zhiShiToIdx];
+        const zhiShiToIdx = this.gongOrder.indexOf(this.zhiShiLuoGong);
+        const menSteps = (zhiShiToIdx - zhiShiFromIdx + 8) % 8;
         
         for (let i = 1; i <= 9; i++) this.gong[i].baMen = '';
         
