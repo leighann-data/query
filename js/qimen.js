@@ -427,8 +427,8 @@ class QimenPan {
     
     arrangeYinGan() {
         // 隐干排列规则：
-        // 从值符落宫开始，按宫数递减顺序排列九仪（戊己庚辛壬癸丁丙乙）
-        // 宫数顺序: 7->6->5->4->3->2->1->9->8 (从起始宫递减，遇0变9)
+        // 从值符落宫开始，按宫数递增顺序排列九仪
+        // 起始九仪由旬内序号决定
         
         // 清空所有隐干
         for (let i = 1; i <= 9; i++) {
@@ -438,16 +438,25 @@ class QimenPan {
         // 九仪顺序
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
         
-        // 从值符落宫开始，按宫数递减排列
+        // 计算旬内序号
+        const hourGZ = this.siZhu.hour;
+        const hourIdx = JIA_ZI_60.indexOf(hourGZ);
+        const xunNei = hourIdx % 10; // 旬内序号 0-9
+        
+        // 起始九仪索引 = (旬内序号 - 2 + 9) % 9
+        const startYiIdx = (xunNei - 2 + 9) % 9;
+        
+        // 从值符落宫开始，按宫数递增排列
         let startGong = this.zhiFuLuoGong;
-        if (startGong === 5) startGong = 2; // 中宫寄坤
         
         for (let i = 0; i < 9; i++) {
-            // 计算当前宫位（递减，1之后是9）
-            let gong = startGong - i;
-            if (gong <= 0) gong += 9;
+            // 计算当前宫位（递增，9之后是1）
+            let gong = startGong + i;
+            if (gong > 9) gong -= 9;
             
-            this.gong[gong].yinGan = jiuYi[i];
+            // 计算当前九仪索引
+            const yiIdx = (startYiIdx + i) % 9;
+            this.gong[gong].yinGan = jiuYi[yiIdx];
         }
     }
     
@@ -466,16 +475,16 @@ class QimenPan {
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
         const yuanIdx = this.gongOrder.indexOf(zhiShiYuanGong);
         
-        // 八门始终顺转（无论阴阳遁）
-        const luoIdx = (yuanIdx + menSteps) % 8;
+        // 八门逆转（在洛书顺序中减步数）
+        const luoIdx = (yuanIdx - menSteps + 8) % 8;
         this.zhiShiLuoGong = this.gongOrder[luoIdx];
         
         for (let i = 1; i <= 9; i++) this.gong[i].baMen = '';
         
-        // 八门整体顺转
+        // 八门整体逆转
         for (const [men, yuanGong] of Object.entries(menYuanPos)) {
             const idx = this.gongOrder.indexOf(yuanGong);
-            const targetIdx = (idx + menSteps) % 8;
+            const targetIdx = (idx - menSteps + 8) % 8;
             this.gong[this.gongOrder[targetIdx]].baMen = men;
         }
         this.gong[5].baMen = '';
