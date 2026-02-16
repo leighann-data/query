@@ -427,65 +427,28 @@ class QimenPan {
     
     arrangeYinGan() {
         // 隐干排列规则：
-        // 1. 六仪(戊己庚辛壬癸)从时干对应的仪开始，排入值使落宫起始的位置
-        // 2. 三奇(乙丙丁)固定逆排入4、3、2宫
-        // 3. 六仪排列时跳过2、3、4宫（留给三奇）
+        // 从值符落宫开始，按宫数递减顺序排列九仪（戊己庚辛壬癸丁丙乙）
+        // 宫数顺序: 7->6->5->4->3->2->1->9->8 (从起始宫递减，遇0变9)
         
         // 清空所有隐干
         for (let i = 1; i <= 9; i++) {
             this.gong[i].yinGan = '';
         }
         
-        // 获取时干
-        const hourGZ = this.siZhu.hour;
-        const shiGan = hourGZ[0];
+        // 九仪顺序
+        const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
         
-        // 六仪和三奇
-        const liuYi = ['戊', '己', '庚', '辛', '壬', '癸'];
-        const sanQi = ['乙', '丙', '丁'];
-        
-        // 值使落宫
-        let startGong = this.zhiShiLuoGong;
+        // 从值符落宫开始，按宫数递减排列
+        let startGong = this.zhiFuLuoGong;
         if (startGong === 5) startGong = 2; // 中宫寄坤
         
-        // 六仪排列的宫位顺序（跳过2、3、4给三奇）
-        const liuYiGongOrder = [1, 5, 6, 7, 8, 9];
-        
-        // 确定六仪起始位置
-        let liuYiStartIdx = liuYi.indexOf(shiGan);
-        if (liuYiStartIdx === -1) {
-            // 时干是三奇(乙丙丁)或甲，找对应的遁仪
-            liuYiStartIdx = liuYi.indexOf(this.dunYi);
-        }
-        
-        // 确定起始宫在六仪宫位中的位置
-        let gongStartIdx = liuYiGongOrder.indexOf(startGong);
-        if (gongStartIdx === -1) {
-            // 起始宫是2、3、4之一，需要调整
-            // 2宫后是5宫，3宫后是4宫（但4也是三奇宫），4宫后是5宫
-            if (startGong === 2 || startGong === 4) gongStartIdx = liuYiGongOrder.indexOf(5);
-            else if (startGong === 3) gongStartIdx = liuYiGongOrder.indexOf(5);
-        }
-        
-        // 排列六仪
-        for (let i = 0; i < 6; i++) {
-            const yiIdx = (liuYiStartIdx + i) % 6;
-            const yi = liuYi[yiIdx];
+        for (let i = 0; i < 9; i++) {
+            // 计算当前宫位（递减，1之后是9）
+            let gong = startGong - i;
+            if (gong <= 0) gong += 9;
             
-            let gongIdx;
-            if (this.isYangDun) {
-                gongIdx = (gongStartIdx + i) % 6;
-            } else {
-                gongIdx = (gongStartIdx - i + 6) % 6;
-            }
-            const targetGong = liuYiGongOrder[gongIdx];
-            this.gong[targetGong].yinGan = yi;
+            this.gong[gong].yinGan = jiuYi[i];
         }
-        
-        // 三奇固定逆排入4、3、2宫
-        this.gong[4].yinGan = '乙';
-        this.gong[3].yinGan = '丙';
-        this.gong[2].yinGan = '丁';
     }
     
     arrangeBaMen() {
@@ -503,26 +466,16 @@ class QimenPan {
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
         const yuanIdx = this.gongOrder.indexOf(zhiShiYuanGong);
         
-        // 计算值使落宫：阳遁顺转，阴遁逆转
-        let luoIdx;
-        if (this.isYangDun) {
-            luoIdx = (yuanIdx + menSteps) % 8;
-        } else {
-            luoIdx = (yuanIdx - menSteps + 8) % 8;
-        }
+        // 八门始终顺转（无论阴阳遁）
+        const luoIdx = (yuanIdx + menSteps) % 8;
         this.zhiShiLuoGong = this.gongOrder[luoIdx];
         
         for (let i = 1; i <= 9; i++) this.gong[i].baMen = '';
         
-        // 八门整体转动
+        // 八门整体顺转
         for (const [men, yuanGong] of Object.entries(menYuanPos)) {
             const idx = this.gongOrder.indexOf(yuanGong);
-            let targetIdx;
-            if (this.isYangDun) {
-                targetIdx = (idx + menSteps) % 8;
-            } else {
-                targetIdx = (idx - menSteps + 8) % 8;
-            }
+            const targetIdx = (idx + menSteps) % 8;
             this.gong[this.gongOrder[targetIdx]].baMen = men;
         }
         this.gong[5].baMen = '';
