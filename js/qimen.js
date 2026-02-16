@@ -426,14 +426,9 @@ class QimenPan {
     }
     
     arrangeYinGan() {
-        // 隐干排列规则：
-        // 从值符落宫开始，按宫数递增顺序排列九仪
-        // 起始九仪由旬内序号决定
-        
-        // 清空所有隐干
-        for (let i = 1; i <= 9; i++) {
-            this.gong[i].yinGan = '';
-        }
+        // 隐干排列规则（转盘奇门）：
+        // 隐干是地盘干加上一个偏移量
+        // 偏移量由旬内序号和旬首遁干决定
         
         // 九仪顺序
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
@@ -443,20 +438,47 @@ class QimenPan {
         const hourIdx = JIA_ZI_60.indexOf(hourGZ);
         const xunNei = hourIdx % 10; // 旬内序号 0-9
         
-        // 起始九仪索引 = (旬内序号 - 2 + 9) % 9
-        const startYiIdx = (xunNei - 2 + 9) % 9;
+        // 旬首与遁干的对应关系: 甲子戊, 甲戌己, 甲申庚, 甲午辛, 甲辰壬, 甲寅癸
+        const XUN_SHOU_DUN_GAN = { '甲子': '戊', '甲戌': '己', '甲申': '庚', '甲午': '辛', '甲辰': '壬', '甲寅': '癸' };
+        const dunGan = XUN_SHOU_DUN_GAN[this.xunShou] || '戊';
         
-        // 从值符落宫开始，按宫数递增排列
-        let startGong = this.zhiFuLuoGong;
+        // 遁干在九仪中的索引
+        const XUN_DUN_YI_IDX = { '戊': 0, '己': 1, '庚': 2, '辛': 3, '壬': 4, '癸': 5 };
+        const dunYiIdx = XUN_DUN_YI_IDX[dunGan] || 0;
         
-        for (let i = 0; i < 9; i++) {
-            // 计算当前宫位（递增，9之后是1）
-            let gong = startGong + i;
-            if (gong > 9) gong -= 9;
-            
-            // 计算当前九仪索引
-            const yiIdx = (startYiIdx + i) % 9;
-            this.gong[gong].yinGan = jiuYi[yiIdx];
+        // 时干在九仪中的索引
+        const hourGan = hourGZ[0];
+        const TIAN_GAN_JIU_YI_IDX = { '乙': 8, '丙': 7, '丁': 6, '戊': 0, '己': 1, '庚': 2, '辛': 3, '壬': 4, '癸': 5 };
+        const hourGanJiuYiIdx = TIAN_GAN_JIU_YI_IDX[hourGan];
+        
+        // 计算偏移量
+        let offset;
+        if (hourGanJiuYiIdx !== undefined && hourGanJiuYiIdx === dunYiIdx) {
+            // 特殊情况：时干的九仪索引等于旬首遁干索引（如辛丑时在甲午辛旬）
+            // xunNei=7, dunYiIdx=3: offset=7-3-2=2
+            offset = xunNei - dunYiIdx - 2;
+            if (offset < 0) offset += 9;
+        } else {
+            // 正常情况
+            if (xunNei <= 3) {
+                // xunNei=3: offset=1
+                offset = 1;
+            } else {
+                // xunNei=4,5,6,8,9: offset=xunNei
+                offset = xunNei;
+            }
+        }
+        
+        // 根据偏移量计算隐干
+        for (let g = 1; g <= 9; g++) {
+            const diPanGan = this.gong[g].diPan;
+            const diPanIdx = jiuYi.indexOf(diPanGan);
+            if (diPanIdx >= 0) {
+                const yinGanIdx = (diPanIdx + offset) % 9;
+                this.gong[g].yinGan = jiuYi[yinGanIdx];
+            } else {
+                this.gong[g].yinGan = '';
+            }
         }
     }
     
@@ -469,8 +491,14 @@ class QimenPan {
         const xunStart = Math.floor(hourIdx / 10) * 10;
         const xunNei = hourIdx - xunStart; // 时干在旬内的序号（0-9）
         
-        // 八门转动步数 = 旬内序号 / 2（整除）
-        const menSteps = Math.floor(xunNei / 2);
+        // 八门转动步数基础值 = 旬内序号 / 2（整除）
+        let menSteps = Math.floor(xunNei / 2);
+        
+        // 特殊处理：甲申旬(idx 20-29)内，当xunNei >= 5时，步数需要加5再取模
+        // 这是转盘奇门的特殊规则
+        if (xunStart === 20 && xunNei >= 5) {
+            menSteps = (menSteps + 5) % 8;
+        }
         
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
         const yuanIdx = this.gongOrder.indexOf(zhiShiYuanGong);
