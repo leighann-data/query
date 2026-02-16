@@ -253,7 +253,7 @@ header p {
 
 .gong {
     background: var(--gong-bg);
-    border: 1px solid var(--border-color);
+    border: 2px solid #999;
     border-radius: 4px;
     padding: 6px;
     display: flex;
@@ -270,15 +270,16 @@ header p {
 }
 
 .gong.kong-wang {
-    border-left: 3px solid var(--accent-red);
+    border-left: 4px solid var(--accent-red);
 }
 
 .gong.ma-xing {
-    border-left: 3px solid var(--accent-green);
+    border-left: 4px solid var(--accent-green);
 }
 
 .gong.zhi-fu {
     border-color: var(--accent-gold);
+    border-width: 2px;
     background: #fffbeb;
 }
 

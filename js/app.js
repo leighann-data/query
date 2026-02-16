@@ -260,10 +260,10 @@ function renderGongGrid() {
         // 构建宫位内容 - 按参考图布局
         let html = '';
         
-        // 第一行：天盘干 + 八神(中间) + 马/空标记
+        // 第一行：隐干 + 八神(中间) + 马/空标记
         html += `<div class="gong-row1">`;
-        html += `<span class="gong-tian">${gong.tianPan || ''}</span>`;
-        html += `<span class="gong-shen">${gong.baShen || ''}</span>`;
+        html += `<span class="gong-tian">${gong.yinGan || ''}</span>`;
+        html += `<span class="gong-shen">${gong.tianShen || ''}</span>`;
         let marks = '';
         if (gong.maStar) marks += `<span class="mark-ma">马</span>`;
         if (gong.kongWang) marks += `<span class="mark-kong">○</span>`;

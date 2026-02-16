@@ -205,3 +205,14 @@ const GONG_AN_GAN = {
 // 五行相生相克
 const WUXING_SHENG = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
 const WUXING_KE = { '木': '土', '土': '水', '水': '火', '火': '金', '金': '木' };
+
+// Export all constants to global scope for Node.js compatibility
+if (typeof globalThis !== "undefined") {
+    Object.assign(globalThis, {
+        TIAN_GAN, DI_ZHI, ZHI_HOUR, JIA_ZI_60, JIU_XING, JIU_XING_WUXING, JIU_XING_JIXIONG,
+        BA_MEN, BA_MEN_WUXING, BA_MEN_JIXIONG, BA_SHEN_YANG, BA_SHEN_YIN, BA_SHEN_WUXING,
+        JIU_GONG, JIU_GONG_WUXING, JIU_GONG_FANGWEI, LUO_SHU_ORDER, GONG_CLOCKWISE,
+        SAN_QI, LIU_YI, YANG_DUN_DI_PAN, YIN_DUN_DI_PAN, JIA_DUN, XUN_SHOU, XUN_KONG,
+        ZHI_GONG, YI_MA, JIE_QI, JIE_QI_JU, GONG_AN_GAN, WUXING_SHENG, WUXING_KE
+    });
+}

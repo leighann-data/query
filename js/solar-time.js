@@ -138,3 +138,8 @@ function formatTimeDiff(minutes) {
     }
     return `${sign}${m}分`;
 }
+
+// Export for Node.js
+if (typeof globalThis !== "undefined") {
+    globalThis.getTrueSolarTime = getTrueSolarTime;
+}
