@@ -37,6 +37,58 @@ const JQ_2000 = [
 
 // 精确节气数据（北京时间）：年份 -> {节气名: {month, day, hour, minute}}
 const EXACT_JIEQI = {
+    2009: {
+        '小寒': {month: 1, day: 5, hour: 13, minute: 18},
+        '大寒': {month: 1, day: 20, hour: 6, minute: 47},
+        '立春': {month: 2, day: 4, hour: 0, minute: 58},
+        '雨水': {month: 2, day: 18, hour: 20, minute: 55},
+        '惊蛰': {month: 3, day: 5, hour: 18, minute: 57},
+        '春分': {month: 3, day: 20, hour: 19, minute: 51},
+        '清明': {month: 4, day: 4, hour: 23, minute: 42},
+        '谷雨': {month: 4, day: 20, hour: 6, minute: 49},
+        '立夏': {month: 5, day: 5, hour: 16, minute: 55},
+        '小满': {month: 5, day: 21, hour: 5, minute: 52},
+        '芒种': {month: 6, day: 5, hour: 21, minute: 0},
+        '夏至': {month: 6, day: 21, hour: 13, minute: 44},
+        '小暑': {month: 7, day: 7, hour: 7, minute: 12},
+        '大暑': {month: 7, day: 23, hour: 0, minute: 35},
+        '立秋': {month: 8, day: 7, hour: 17, minute: 0},
+        '处暑': {month: 8, day: 23, hour: 7, minute: 40},
+        '白露': {month: 9, day: 7, hour: 19, minute: 58},
+        '秋分': {month: 9, day: 23, hour: 5, minute: 21},
+        '寒露': {month: 10, day: 8, hour: 11, minute: 41},
+        '霜降': {month: 10, day: 23, hour: 14, minute: 47},
+        '立冬': {month: 11, day: 7, hour: 14, minute: 58},
+        '小雪': {month: 11, day: 22, hour: 12, minute: 26},
+        '大雪': {month: 12, day: 7, hour: 7, minute: 55},
+        '冬至': {month: 12, day: 22, hour: 1, minute: 50}
+    },
+    2024: {
+        '小寒': {month: 1, day: 6, hour: 4, minute: 49},
+        '大寒': {month: 1, day: 20, hour: 22, minute: 7},
+        '立春': {month: 2, day: 4, hour: 16, minute: 27},
+        '雨水': {month: 2, day: 19, hour: 12, minute: 13},
+        '惊蛰': {month: 3, day: 5, hour: 10, minute: 23},
+        '春分': {month: 3, day: 20, hour: 11, minute: 6},
+        '清明': {month: 4, day: 4, hour: 15, minute: 2},
+        '谷雨': {month: 4, day: 19, hour: 21, minute: 59},
+        '立夏': {month: 5, day: 5, hour: 8, minute: 10},
+        '小满': {month: 5, day: 20, hour: 20, minute: 59},
+        '芒种': {month: 6, day: 5, hour: 12, minute: 10},
+        '夏至': {month: 6, day: 21, hour: 4, minute: 51},
+        '小暑': {month: 7, day: 6, hour: 22, minute: 20},
+        '大暑': {month: 7, day: 22, hour: 15, minute: 44},
+        '立秋': {month: 8, day: 7, hour: 8, minute: 9},
+        '处暑': {month: 8, day: 22, hour: 22, minute: 55},
+        '白露': {month: 9, day: 7, hour: 11, minute: 11},
+        '秋分': {month: 9, day: 22, hour: 20, minute: 44},
+        '寒露': {month: 10, day: 8, hour: 3, minute: 0},
+        '霜降': {month: 10, day: 23, hour: 6, minute: 15},
+        '立冬': {month: 11, day: 7, hour: 6, minute: 20},
+        '小雪': {month: 11, day: 22, hour: 3, minute: 56},
+        '大雪': {month: 12, day: 6, hour: 23, minute: 17},
+        '冬至': {month: 12, day: 21, hour: 17, minute: 21}
+    },
     2026: {
         '小寒': {month: 1, day: 5, hour: 16, minute: 23},
         '大寒': {month: 1, day: 20, hour: 9, minute: 45},
@@ -228,6 +280,15 @@ function getCurrentJieQi(date) {
                     };
                     break;
                 }
+            }
+            
+            // 找到下一个节气（不管是节还是气）
+            if (i + 1 < allJieqi.length) {
+                result.nextJieQi = {
+                    name: allJieqi[i + 1].name,
+                    startJd: allJieqi[i + 1].jd,
+                    startDate: allJieqi[i + 1].date
+                };
             }
             
             // 找到当前所在的"节"
@@ -428,4 +489,11 @@ function getXunShou(ganZhi) {
 function getKongWang(ganZhi) {
     const xunShou = getXunShou(ganZhi);
     return XUN_KONG[xunShou] || [];
+}
+
+// Export for Node.js
+if (typeof globalThis !== "undefined") {
+    Object.assign(globalThis, {
+        getSiZhu, getCurrentJieQi, getDayGanZhi, getHourGanZhi, getXunShou, getKongWang
+    });
 }

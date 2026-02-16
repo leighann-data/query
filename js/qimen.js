@@ -47,9 +47,10 @@ class QimenPan {
         this.determineDunJu();
         this.arrangeDiPan();
         this.determineZhiFuZhiShi();
-        this.arrangeTianPan();
         this.arrangeJiuXing();
+        this.arrangeTianPan();
         this.arrangeBaMen();
+        this.arrangeYinGan();  // 隐干需要在八门之后排列（需要zhiShiLuoGong）
         this.arrangeBaShen();
         this.calculateKongWang();
         this.calculateMaStar();
@@ -60,23 +61,240 @@ class QimenPan {
         this.dunType = jieqiInfo.dun;
         this.isYangDun = this.dunType === '阳';
         
-        // 置闰法
+        if (this.method === 'chaiBu') {
+            // 拆补法：根据日干支的旬首确定三元
+            // 甲子(0)、甲午(30): 上元
+            // 甲申(20)、甲寅(50): 中元
+            // 甲戌(10)、甲辰(40): 下元
+            const dayIndex = JIA_ZI_60.indexOf(this.siZhu.day);
+            const xunStart = Math.floor(dayIndex / 10) * 10;
+            
+            if (xunStart === 0 || xunStart === 30) {
+                this.yuan = 0; // 上元
+            } else if (xunStart === 20 || xunStart === 50) {
+                this.yuan = 1; // 中元
+            } else {
+                this.yuan = 2; // 下元
+            }
+            this.juNum = jieqiInfo.ju[this.yuan];
+        } else {
+            // 超接置闰法
+            this.determineDunJuZhiRun();
+        }
+    }
+    
+    // 超接置闰法核心算法
+    // 规则:
+    // 1. 上元符头: 甲子(0)、己卯(15)、甲午(30)、己酉(45)
+    // 2. 找当前日期所在的三元(从最近的上元符头起算15天)
+    // 3. 如果上元符头在当前节气之前(超神),用当前节气
+    // 4. 如果上元符头在当前节气之后(接气),用下一节气
+    // 5. 超神超过9天时需要置闰(重复三元)
+    determineDunJuZhiRun() {
+        const currentJie = this.jieQi.currentJie;
+        const nextJieQi = this.jieQi.nextJieQi || this.jieQi.nextJie;
+        
+        if (!currentJie) {
+            // 无法获取节气信息时，使用简单方法
+            const jieqiInfo = JIE_QI_JU[this.jieQi.name];
+            this.yuan = this.getYuanSimple();
+            this.juNum = jieqiInfo.ju[this.yuan];
+            return;
+        }
+        
+        // 获取当前日干支索引
+        const dayGzIdx = JIA_ZI_60.indexOf(this.siZhu.day);
+        
+        // 找当前日期所属的上元符头
+        // 上元符头: 甲子(0)、己卯(15)、甲午(30)、己酉(45)
+        const shangYuanFuTou = [0, 15, 30, 45];
+        
+        // 往前找最近的上元符头
+        let fuTouIdx = -1;
+        let daysFromFuTou = 0;
+        for (let i = 0; i < 60; i++) {
+            const checkIdx = (dayGzIdx - i + 60) % 60;
+            if (shangYuanFuTou.includes(checkIdx)) {
+                fuTouIdx = checkIdx;
+                daysFromFuTou = i;
+                break;
+            }
+        }
+        
+        // 计算在三元中的位置
+        // 上元: 0-4天, 中元: 5-9天, 下元: 10-14天
+        let yuan;
+        if (daysFromFuTou < 5) {
+            yuan = 0; // 上元
+        } else if (daysFromFuTou < 10) {
+            yuan = 1; // 中元
+        } else if (daysFromFuTou < 15) {
+            yuan = 2; // 下元
+        } else {
+            // 超出15天,应该在下一个三元中
+            // 这种情况不应该发生,因为我们找的是最近的上元符头
+            yuan = Math.floor((daysFromFuTou % 15) / 5);
+        }
+        
+        // 计算上元符头日的日期数(以天为单位,不含时间)
+        const currentJd = this.getJulianDay(this.trueSolarTime);
+        const currentDayNum = Math.floor(currentJd + 0.5);  // 当前日期的日数
+        const fuTouDayNum = currentDayNum - daysFromFuTou;  // 符头日的日数
+        
+        // 获取当前节气交节的日期数
+        const jieqiJd = currentJie.startJd;
+        const jieqiDayNum = Math.floor(jieqiJd + 0.5);  // 节气交节的日数
+        
+        // 判断超神还是接气
+        // 关键: 用日期来比,不考虑具体时刻
+        // 正授: 符头日 == 节气日 (同一天)
+        // 超神: 符头日 < 节气日 (符头在节气前)
+        // 接气: 符头日 > 节气日 (符头在节气后)
+        
+        let useJieQi;  // 使用哪个节气的局数
+        
+        if (fuTouDayNum <= jieqiDayNum) {
+            // 正授或超神: 符头在节气日或之前,用当前节气
+            useJieQi = currentJie.name;
+            
+            // 检查是否需要置闰(超神超过9天)
+            const chaoShenDays = jieqiDayNum - fuTouDayNum;
+            if (chaoShenDays > 9) {
+                this.isZhiRun = true;
+                this.zhiRunInfo = `超神${chaoShenDays}天,需置闰`;
+            } else if (chaoShenDays === 0) {
+                this.zhiRunInfo = '正授';
+            }
+        } else {
+            // 接气: 符头在节气后
+            const jieQiDays = fuTouDayNum - jieqiDayNum;  // 接气天数
+            
+            if (jieQiDays > 9 && nextJieQi) {
+                // 接气超过9天,用下一节气的局
+                useJieQi = nextJieQi.name;
+                this.isZhiRun = true;
+                this.zhiRunInfo = `接气${jieQiDays}天,用${nextJieQi.name}`;
+            } else {
+                // 接气9天及以下,仍用当前节气的局
+                useJieQi = currentJie.name;
+                this.isZhiRun = true;
+                this.zhiRunInfo = `置闰(接气${jieQiDays}天)`;
+            }
+        }
+        
+        // 获取对应节气的局数
+        const jieqiInfo = JIE_QI_JU[useJieQi];
+        if (!jieqiInfo) {
+            // 如果找不到节气信息(可能是"气"而不是"节"),使用当前节
+            const currentJieInfo = JIE_QI_JU[this.jieQi.name];
+            this.dunType = currentJieInfo.dun;
+            this.isYangDun = this.dunType === '阳';
+            this.yuan = yuan;
+            this.juNum = currentJieInfo.ju[yuan];
+            return;
+        }
+        
+        this.dunType = jieqiInfo.dun;
+        this.isYangDun = this.dunType === '阳';
+        this.yuan = yuan;
+        this.juNum = jieqiInfo.ju[yuan];
+    }
+    
+    // 简单三元计算（备用）
+    getYuanSimple() {
         const dayIndex = JIA_ZI_60.indexOf(this.siZhu.day);
         const xunStart = Math.floor(dayIndex / 10) * 10;
-        if (xunStart === 0 || xunStart === 30) this.yuan = 0;
-        else if (xunStart === 10 || xunStart === 40) this.yuan = 1;
-        else this.yuan = 2;
+        const dayInXun = dayIndex - xunStart;
         
-        this.juNum = jieqiInfo.ju[this.yuan];
+        if (dayInXun <= 4) {
+            if (xunStart === 0 || xunStart === 30) return 0;
+            else if (xunStart === 10 || xunStart === 40) return 2;
+            else return 1;
+        } else {
+            if (xunStart === 0 || xunStart === 30) return 1;
+            else if (xunStart === 10 || xunStart === 40) return 0;
+            else return 2;
+        }
+    }
+    
+    // 查找节气后第一个符头(甲或己日)
+    findFirstFuTou(jieqiStartJd) {
+        // 从节气开始日向后找第一个甲日或己日
+        // JD以中午12:00为一天的分界，需要转换为以00:00为分界
+        // JD + 0.5 然后 floor 可以得到正确的"天数"
+        const dayNum = Math.floor(jieqiStartJd + 0.5);
+        
+        for (let i = 0; i < 10; i++) {
+            const checkDayNum = dayNum + i;
+            // 使用天数直接计算干支
+            const dayGZ = this.getDayGanZhiByDayNum(checkDayNum);
+            const gan = dayGZ[0];
+            if (gan === '甲' || gan === '己') {
+                // 返回这一天00:00的JD
+                return checkDayNum - 0.5;
+            }
+        }
+        return dayNum - 0.5;
+    }
+    
+    // 根据天数(JD + 0.5的整数部分)获取日干支
+    getDayGanZhiByDayNum(dayNum) {
+        // 以1900年1月1日(甲戌日)为基准
+        // 1900/1/1 00:00 的JD = 2415020.5
+        // 对应的dayNum = floor(2415020.5 + 0.5) = 2415021
+        const baseDayNum = 2415021; // 1900年1月1日
+        const baseGzIdx = 10;       // 甲戌=10
+        const dayDiff = dayNum - baseDayNum;
+        const index = ((dayDiff + baseGzIdx) % 60 + 60) % 60;
+        return JIA_ZI_60[index];
+    }
+    
+    // 根据儒略日获取日干支
+    getDayGanZhiByJd(jd) {
+        // 儒略日转日干支：以1900年1月1日(甲戌日)为基准
+        const baseJd = 2415020; // 1900年1月1日的儒略日整数部分
+        const baseGzIdx = 10;   // 甲戌=10
+        const dayDiff = Math.floor(jd) - baseJd;
+        const index = ((dayDiff + baseGzIdx) % 60 + 60) % 60;
+        return JIA_ZI_60[index];
+    }
+    
+    // 旧方法备份(已弃用)
+    getDayGanZhiByJd_old(jd) {
+        const baseJd = 2451551;
+        const dayDiff = Math.floor(jd) - baseJd;
+        const index = ((dayDiff % 60) + 60) % 60;
+        return JIA_ZI_60[index];
+    }
+    
+    // 获取儒略日
+    getJulianDay(date) {
+        const y = date.getFullYear();
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const h = date.getHours() + date.getMinutes() / 60;
+        
+        let jy = y;
+        let jm = m;
+        if (m <= 2) { jy--; jm += 12; }
+        const a = Math.floor(jy / 100);
+        const b = 2 - a + Math.floor(a / 4);
+        return Math.floor(365.25 * (jy + 4716)) + Math.floor(30.6001 * (jm + 1)) + d + h / 24 + b - 1524.5;
+    }
+    
+    // 获取上一个节气名称
+    getPrevJieqiName(jieqiName) {
+        const jieList = ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑', '立秋', '白露', '寒露', '立冬', '大雪', '小寒'];
+        const idx = jieList.indexOf(jieqiName);
+        if (idx > 0) return jieList[idx - 1];
+        return jieList[jieList.length - 1];
     }
     
     arrangeDiPan() {
+        // 转盘奇门地盘：从局数宫开始，按1-9宫数字顺序布九仪
         // 九仪顺序: 六仪(戊己庚辛壬癸) + 三奇(丁丙乙)
         const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
         
-        // 超接置闰法: 从局数宫开始,按数字顺序布九仪(含中宫)
-        // 阳遁二局: 2→3→4→5→6→7→8→9→1
-        // 阴遁九局: 9→8→7→6→5→4→3→2→1
         const start = this.juNum;
         
         for (let i = 0; i < 9; i++) {
@@ -154,126 +372,191 @@ class QimenPan {
         return this.isYangDun ? 2 : 8;
     }
     
-    arrangeTianPan() {
-        // 天盘算法：地盘干按宫号移动(旬内序号-1)步
-        // 1. 构建完整地盘(含中宫)
-        // 2. 天盘干[gong] = 地盘干[gong + 步数]
-        
-        const jiuYi = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
-        
-        // 构建完整地盘(按宫号1-9)
-        const diPanFull = [''];
-        for (let g = 1; g <= 9; g++) {
-            const yiIdx = (g - this.juNum + 9) % 9;
-            diPanFull[g] = jiuYi[yiIdx];
-        }
-        
-        // 计算移动步数 = 时干旬内序号 - 1
-        const hourGZ = this.siZhu.hour;
-        const hourIdx = JIA_ZI_60.indexOf(hourGZ);
-        const xunStart = Math.floor(hourIdx / 10) * 10;
-        const xunNei = hourIdx - xunStart;
-        const steps = xunNei - 1;
-        
-        // 天盘干 = 地盘干向前移动steps步
-        for (let g = 1; g <= 9; g++) {
-            if (g === 5) {
-                this.gong[g].tianPan = '';
-                continue;
-            }
-            let srcGong = g + steps;
-            if (srcGong > 9) srcGong -= 9;
-            if (srcGong < 1) srcGong += 9;
-            this.gong[g].tianPan = diPanFull[srcGong];
-        }
-    }
-    
     arrangeJiuXing() {
+        // 九星原宫位置
         const xingYuanPos = { '天蓬': 1, '天任': 8, '天冲': 3, '天辅': 4, '天英': 9, '天芮': 2, '天柱': 7, '天心': 6 };
+        
+        // 计算九星转动步数
         const fromIdx = this.gongOrder.indexOf(this.zhiFuYuanGong);
         const toIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
         const steps = (toIdx - fromIdx + 8) % 8;
+        this.xingSteps = steps;
         
+        // 清空
         for (let i = 1; i <= 9; i++) {
             this.gong[i].jiuXing = '';
-            this.gong[i].xingDaiGan = ''; // 九星所带地盘干
+            this.gong[i].xingDaiGan = '';  // 九星带干
+            this.gong[i].qinDaiGan = '';
         }
         
+        // 九星转动
         for (const [xing, yuanGong] of Object.entries(xingYuanPos)) {
             const idx = this.gongOrder.indexOf(yuanGong);
             const targetGong = this.gongOrder[(idx + steps) % 8];
             this.gong[targetGong].jiuXing = xing;
-            // 九星所带地盘干 = 九星原宫的地盘干
+            // 九星带干 = 九星原宫的地盘干
             this.gong[targetGong].xingDaiGan = this.gong[yuanGong].diPan;
         }
         
-        // 天禽寄宫（寄到天芮所在宫）
-        const jiGong = this.isYangDun ? 2 : 8;
-        const jiIdx = this.gongOrder.indexOf(jiGong);
-        const qinGong = this.gongOrder[(jiIdx + steps) % 8];
-        // 禽芮合体显示
-        this.gong[qinGong].jiuXing = '禽芮';
-        // 保存天禽所带地盘干（5宫地盘干）
-        this.gong[qinGong].qinDaiGan = this.gong[5].diPan;
-        // 天芮所带地盘干（2宫地盘干）
-        this.gong[qinGong].xingDaiGan = this.gong[2].diPan;
+        // 天禽随天芮转动，禽芮同宫
+        const ruiYuanGong = 2;
+        const ruiIdx = this.gongOrder.indexOf(ruiYuanGong);
+        const ruiTargetGong = this.gongOrder[(ruiIdx + steps) % 8];
+        
+        // 禽芮同宫
+        this.gong[ruiTargetGong].jiuXing = '禽芮';
+        this.gong[ruiTargetGong].qinDaiGan = this.gong[5].diPan; // 天禽所带干 = 5宫地盘干
         
         // 5宫不显示九星
         this.gong[5].jiuXing = '';
+        this.gong[5].xingDaiGan = '';
+    }
+    
+    arrangeTianPan() {
+        // 转盘奇门：天盘干随天盘整体转动
+        // 转动步数 = 九星转动步数(gongOrder) * 2, 按数字顺序
+        
+        const steps = (this.xingSteps * 2) % 9;
+        
+        for (let gong = 1; gong <= 9; gong++) {
+            // 天盘[g] = 地盘[(g + steps - 1) % 9 + 1]
+            let srcGong = (gong - 1 + steps) % 9 + 1;
+            this.gong[gong].tianPan = this.gong[srcGong].diPan;
+        }
+    }
+    
+    arrangeYinGan() {
+        // 隐干排列规则：
+        // 1. 六仪(戊己庚辛壬癸)从时干对应的仪开始，排入值使落宫起始的位置
+        // 2. 三奇(乙丙丁)固定逆排入4、3、2宫
+        // 3. 六仪排列时跳过2、3、4宫（留给三奇）
+        
+        // 清空所有隐干
+        for (let i = 1; i <= 9; i++) {
+            this.gong[i].yinGan = '';
+        }
+        
+        // 获取时干
+        const hourGZ = this.siZhu.hour;
+        const shiGan = hourGZ[0];
+        
+        // 六仪和三奇
+        const liuYi = ['戊', '己', '庚', '辛', '壬', '癸'];
+        const sanQi = ['乙', '丙', '丁'];
+        
+        // 值使落宫
+        let startGong = this.zhiShiLuoGong;
+        if (startGong === 5) startGong = 2; // 中宫寄坤
+        
+        // 六仪排列的宫位顺序（跳过2、3、4给三奇）
+        const liuYiGongOrder = [1, 5, 6, 7, 8, 9];
+        
+        // 确定六仪起始位置
+        let liuYiStartIdx = liuYi.indexOf(shiGan);
+        if (liuYiStartIdx === -1) {
+            // 时干是三奇(乙丙丁)或甲，找对应的遁仪
+            liuYiStartIdx = liuYi.indexOf(this.dunYi);
+        }
+        
+        // 确定起始宫在六仪宫位中的位置
+        let gongStartIdx = liuYiGongOrder.indexOf(startGong);
+        if (gongStartIdx === -1) {
+            // 起始宫是2、3、4之一，需要调整
+            // 2宫后是5宫，3宫后是4宫（但4也是三奇宫），4宫后是5宫
+            if (startGong === 2 || startGong === 4) gongStartIdx = liuYiGongOrder.indexOf(5);
+            else if (startGong === 3) gongStartIdx = liuYiGongOrder.indexOf(5);
+        }
+        
+        // 排列六仪
+        for (let i = 0; i < 6; i++) {
+            const yiIdx = (liuYiStartIdx + i) % 6;
+            const yi = liuYi[yiIdx];
+            
+            let gongIdx;
+            if (this.isYangDun) {
+                gongIdx = (gongStartIdx + i) % 6;
+            } else {
+                gongIdx = (gongStartIdx - i + 6) % 6;
+            }
+            const targetGong = liuYiGongOrder[gongIdx];
+            this.gong[targetGong].yinGan = yi;
+        }
+        
+        // 三奇固定逆排入4、3、2宫
+        this.gong[4].yinGan = '乙';
+        this.gong[3].yinGan = '丙';
+        this.gong[2].yinGan = '丁';
     }
     
     arrangeBaMen() {
         const menYuanPos = { '休门': 1, '生门': 8, '伤门': 3, '杜门': 4, '景门': 9, '死门': 2, '惊门': 7, '开门': 6 };
         
-        // 八门转动：值使落宫 = 值使原宫 + 旬内序号（数字直接相加）
+        // 八门转动：值使按时干在旬内序号的一半移动（五子元遁）
         const hourGZ = this.siZhu.hour;
         const hourIdx = JIA_ZI_60.indexOf(hourGZ);
         const xunStart = Math.floor(hourIdx / 10) * 10;
         const xunNei = hourIdx - xunStart; // 时干在旬内的序号（0-9）
         
+        // 八门转动步数 = 旬内序号 / 2（整除）
+        const menSteps = Math.floor(xunNei / 2);
+        
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
+        const yuanIdx = this.gongOrder.indexOf(zhiShiYuanGong);
         
-        // 值使落宫 = 原宫 + 旬内序号
-        let zhiShiLuoGongNum = zhiShiYuanGong + xunNei;
-        if (zhiShiLuoGongNum > 9) zhiShiLuoGongNum -= 9;
-        if (zhiShiLuoGongNum === 5) zhiShiLuoGongNum = 2; // 中宫寄坤
-        this.zhiShiLuoGong = zhiShiLuoGongNum;
-        
-        // 计算八门转动步数（在八宫顺序中）
-        const zhiShiFromIdx = this.gongOrder.indexOf(zhiShiYuanGong);
-        const zhiShiToIdx = this.gongOrder.indexOf(this.zhiShiLuoGong);
-        const menSteps = (zhiShiToIdx - zhiShiFromIdx + 8) % 8;
+        // 计算值使落宫：阳遁顺转，阴遁逆转
+        let luoIdx;
+        if (this.isYangDun) {
+            luoIdx = (yuanIdx + menSteps) % 8;
+        } else {
+            luoIdx = (yuanIdx - menSteps + 8) % 8;
+        }
+        this.zhiShiLuoGong = this.gongOrder[luoIdx];
         
         for (let i = 1; i <= 9; i++) this.gong[i].baMen = '';
         
+        // 八门整体转动
         for (const [men, yuanGong] of Object.entries(menYuanPos)) {
             const idx = this.gongOrder.indexOf(yuanGong);
-            this.gong[this.gongOrder[(idx + menSteps) % 8]].baMen = men;
+            let targetIdx;
+            if (this.isYangDun) {
+                targetIdx = (idx + menSteps) % 8;
+            } else {
+                targetIdx = (idx - menSteps + 8) % 8;
+            }
+            this.gong[this.gongOrder[targetIdx]].baMen = men;
         }
         this.gong[5].baMen = '';
     }
     
     arrangeBaShen() {
-        // 八神顺序：值符、腾蛇、太阴、六合、白虎、玄武、九地、九天
-        const baShen = ['值符', '腾蛇', '太阴', '六合', '白虎', '玄武', '九地', '九天'];
+        // 八神顺序：直符、腾蛇、太阴、六合、白虎、玄武、九地、九天
+        const baShen = ['直符', '腾蛇', '太阴', '六合', '白虎', '玄武', '九地', '九天'];
         
-        // 地盘八神：从值符原宫开始排
-        const diStartIdx = this.gongOrder.indexOf(this.zhiFuYuanGong);
         for (let i = 1; i <= 9; i++) {
-            this.gong[i].baShen = '';    // 地盘八神
-            this.gong[i].tianShen = '';  // 天盘八神
+            this.gong[i].baShen = '';      // 地盘八神（固定）
+            this.gong[i].tianShen = '';    // 天盘八神（随天盘转动）
         }
         
-        for (let i = 0; i < 8; i++) {
-            const diIdx = this.isYangDun ? (diStartIdx + i) % 8 : (diStartIdx - i + 8) % 8;
-            this.gong[this.gongOrder[diIdx]].baShen = baShen[i];
+        // 地盘八神：从值符原宫开始排（固定不动）
+        // 如果原宫是5宫（中宫），寄到2宫（坤）
+        let diStartGong = this.zhiFuYuanGong === 5 ? 2 : this.zhiFuYuanGong;
+        const diStartIdx = this.gongOrder.indexOf(diStartGong);
+        if (diStartIdx !== -1) {
+            for (let i = 0; i < 8; i++) {
+                const idx = this.isYangDun ? (diStartIdx + i) % 8 : (diStartIdx - i + 8) % 8;
+                this.gong[this.gongOrder[idx]].baShen = baShen[i];
+            }
         }
         
-        // 天盘八神：从值符落宫开始排
-        const tianStartIdx = this.gongOrder.indexOf(this.zhiFuLuoGong);
-        for (let i = 0; i < 8; i++) {
-            const tianIdx = this.isYangDun ? (tianStartIdx + i) % 8 : (tianStartIdx - i + 8) % 8;
-            this.gong[this.gongOrder[tianIdx]].tianShen = baShen[i];
+        // 天盘八神：从值符落宫开始排（随天盘转动）
+        // 如果落宫是5宫（中宫），寄到2宫（坤）
+        let tianStartGong = this.zhiFuLuoGong === 5 ? 2 : this.zhiFuLuoGong;
+        const tianStartIdx = this.gongOrder.indexOf(tianStartGong);
+        if (tianStartIdx !== -1) {
+            for (let i = 0; i < 8; i++) {
+                const idx = this.isYangDun ? (tianStartIdx + i) % 8 : (tianStartIdx - i + 8) % 8;
+                this.gong[this.gongOrder[idx]].tianShen = baShen[i];
+            }
         }
         
         this.gong[5].baShen = '';
@@ -383,3 +666,6 @@ class QimenPan {
         return `${sd.year}年${sd.month}月${sd.day}日${jqSiZhu.day}`;
     }
 }
+
+// 暴露给全局
+if (typeof globalThis !== 'undefined') globalThis.QimenPan = QimenPan;
