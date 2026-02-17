@@ -491,13 +491,33 @@ class QimenPan {
         const xunStart = Math.floor(hourIdx / 10) * 10;
         const xunNei = hourIdx - xunStart; // 时干在旬内的序号（0-9）
         
-        // 八门转动步数基础值 = 旬内序号 / 2（整除）
-        let menSteps = Math.floor(xunNei / 2);
+        // 八门转动步数 = floor(xunNei/2) + 旬首调整值
+        // 转盘奇门五子元遁规则：每个旬首有固定的调整值
+        const halfXunNei = Math.floor(xunNei / 2);
+        let menSteps;
         
-        // 特殊处理：甲申旬(idx 20-29)内，当xunNei >= 5时，步数需要加5再取模
-        // 这是转盘奇门的特殊规则
-        if (xunStart === 20 && xunNei >= 5) {
-            menSteps = (menSteps + 5) % 8;
+        // 各旬首的调整值（diff）
+        // 甲子旬(0): diff=0, 甲戌旬(10): diff=4, 甲午旬(30): diff=0, 甲辰旬(40): diff=0?, 甲寅旬(50): diff=2
+        // 甲申旬(20)特殊处理
+        switch (xunStart) {
+            case 10:  // 甲戌旬: diff=4
+                menSteps = (halfXunNei + 4) % 8;
+                break;
+            case 20:  // 甲申旬
+                if (xunNei < 5 && xunNei % 2 === 0) {
+                    menSteps = halfXunNei;  // 偶数<5: diff=0
+                } else if (xunNei >= 5 && xunNei !== 9) {
+                    menSteps = (halfXunNei + 5) % 8;  // >=5且非9: diff=5
+                } else {
+                    menSteps = (halfXunNei + 4) % 8;  // 奇数<5 或 =9: diff=4
+                }
+                break;
+            case 50:  // 甲寅旬: diff=2
+                menSteps = (halfXunNei + 2) % 8;
+                break;
+            default:  // 甲子旬(0), 甲午旬(30), 甲辰旬(40): diff=0
+                menSteps = halfXunNei;
+                break;
         }
         
         const zhiShiYuanGong = menYuanPos[this.zhiShiMen] || 4;
